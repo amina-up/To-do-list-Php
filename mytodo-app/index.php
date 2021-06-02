@@ -13,36 +13,39 @@ require 'db_conn.php';
 </head>
 <body>
 
-    <div class="main-section">
-<div class="add-section">
+<div class="main-section">
+       <div class="add-section">
+          <form action="actions/add.php" method="POST" autocomplete="off">
+             <?php if(isset($_GET['mess']) && $_GET['mess'] == 'error'){ ?>
+                <input type="text" 
+                     name="title" 
+                     style="border-color: #ff6666"
+                     placeholder="This field is required" />
 
-<?php if(isset($_GET['mess']) && $_GET['mess'] =='error'){?>
-error
-<?php}?>
+              <button type="submit">Add &nbsp; <span>&#43;</span></button>
 
+             <?php }else{ ?>
+              <input type="text" 
+                     name="title" 
+                     placeholder="What do you need to do?" />
+              <button type="submit">Add &nbsp; <span>&#43;</span></button>
+             <?php } ?>
+          </form>
+       </div>
+       <?php 
+          $todos = $conn->query("SELECT * FROM todoss ORDER BY id DESC");
+       ?>
+       <div class="show-todo-section">
+            <?php if($todos->rowCount() <= 0){ ?>
+                <div class="todo-item">
+                    <div class="empty">
+                        <img src="image/todo.jpg" width="100%" />
+                        <img src="image/pill_loader.gif" width="250px">
+                    </div>
+                </div>
+            <?php } ?>
 
-<form action="actions/add.php" method="POST" autocomplete="off">
-  <input type="text" name="title" placeholder="this field is required"/>
-<button type="submit">Add &nbsp; <span>&#43;</span></button>
-</form>
-</div>
-<?php
-$todos=$conn->query("SELECT * FROM todoss ORDER BY id DESC");
-
-
-?>
-<div class="show-todo-section">
-<?php if($todos->rowCount()<=0){?>
-<div class="todo-item">
-<div class="empty">
-<img src="image/todo.jpg" width="100%"/>
-<img src="image/pill_loader.gif" width="250px"/>
-</div>
-</div>
-<?php }?>
-
-
-<?php while($todo = $todos->fetch(PDO::FETCH_ASSOC)) { ?>
+            <?php while($todo = $todos->fetch(PDO::FETCH_ASSOC)) { ?>
                 <div class="todo-item">
                     <span id="<?php echo $todo['id']; ?>"
                           class="remove-to-do">x</span>
@@ -64,6 +67,48 @@ $todos=$conn->query("SELECT * FROM todoss ORDER BY id DESC");
             <?php } ?>
        </div>
     </div>
+    <script
+  src="https://code.jquery.com/jquery-3.6.0.js"
+  integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+  crossorigin="anonymous"></script>
 
+<script>
+ $(document).ready(function(){
+            $('.remove-to-do').click(function(){
+                const id = $(this).attr('id');
+                
+                $.post("actions/remove.php", 
+                      {
+                          id: id
+                      },
+                      (data)  => {
+                         if(data){
+                             $(this).parent().hide(600);
+                         }
+                      }
+                );
+            });
+
+            $(".check-box").click(function(e){
+                const id = $(this).attr('data-todo-id');
+                
+                $.post('actions/check.php', 
+                      {
+                          id: id
+                      },
+                      (data) => {
+                          if(data != 'error'){
+                              const h2 = $(this).next();
+                              if(data === '1'){
+                                  h2.removeClass('checked');
+                              }else {
+                                  h2.addClass('checked');
+                              }
+                          }
+                      }
+                );
+            });
+        });
+</script>
 </body>
 </html>
